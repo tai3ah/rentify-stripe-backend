@@ -405,19 +405,22 @@ app.post("/transactions/owner", async (req, res) => {
   }
 });
 
-//delte acc
+//delete
 app.delete("/stripe/delete-accounts", async (req, res) => {
   try {
     const { customerId, connectAccountId } = req.body;
 
     if (!customerId && !connectAccountId) {
-      return res.status(400).json({ success: false, message: "No Stripe IDs provided." });
+      return res.status(400).json({
+        success: false,
+        message: "No Stripe IDs provided."
+      });
     }
 
     const results = {};
 
     // --------------------------
-    // Delete Stripe Customer (ALWAYS exists)
+    // Delete Stripe Customer
     // --------------------------
     if (customerId) {
       try {
@@ -430,18 +433,34 @@ app.delete("/stripe/delete-accounts", async (req, res) => {
     }
 
     // --------------------------
-    // Delete Connect Account (ONLY if created)
+    // Delete Connect Account
     // --------------------------
     if (connectAccountId) {
       try {
+        // 1️⃣ Disable capabilities
+        await stripe.accounts.update(connectAccountId, {
+          capabilities: {
+            card_payments: { requested: false },
+            transfers: { requested: false }
+          }
+        });
+
+        // 2️⃣ Disable payouts + clear metadata
+        await stripe.accounts.update(connectAccountId, {
+          settings: { payouts: { schedule: { delay_days: 0 } } },
+          metadata: { deletedByUser: "true" }
+        });
+
+        // 3️⃣ Delete account
         await stripe.accounts.del(connectAccountId);
         results.connectAccountDeleted = true;
+
       } catch (err) {
-        console.log("Connect account delete error:", err.message);
+        console.log("❌ Connect account delete error:", err.message);
         results.connectAccountDeleted = false;
       }
     } else {
-      results.connectAccountDeleted = true; // No account = nothing to delete
+      results.connectAccountDeleted = true;
     }
 
     return res.json({
