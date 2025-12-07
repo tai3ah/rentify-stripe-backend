@@ -404,3 +404,54 @@ app.post("/transactions/owner", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+//delte acc
+app.delete("/stripe/delete-accounts", async (req, res) => {
+  try {
+    const { customerId, connectAccountId } = req.body;
+
+    if (!customerId && !connectAccountId) {
+      return res.status(400).json({ success: false, message: "No Stripe IDs provided." });
+    }
+
+    const results = {};
+
+    // --------------------------
+    // Delete Stripe Customer (ALWAYS exists)
+    // --------------------------
+    if (customerId) {
+      try {
+        await stripe.customers.del(customerId);
+        results.customerDeleted = true;
+      } catch (err) {
+        console.log("Customer delete error:", err.message);
+        results.customerDeleted = false;
+      }
+    }
+
+    // --------------------------
+    // Delete Connect Account (ONLY if created)
+    // --------------------------
+    if (connectAccountId) {
+      try {
+        await stripe.accounts.del(connectAccountId);
+        results.connectAccountDeleted = true;
+      } catch (err) {
+        console.log("Connect account delete error:", err.message);
+        results.connectAccountDeleted = false;
+      }
+    } else {
+      results.connectAccountDeleted = true; // No account = nothing to delete
+    }
+
+    return res.json({
+      success: true,
+      message: "Deletion attempted.",
+      details: results
+    });
+
+  } catch (err) {
+    console.error("Stripe delete error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
