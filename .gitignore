@@ -137,3 +137,24 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# --- Rentify Backend Custom Ignores ---
+
+# Local environment files (Render will use its own dashboard env vars)
+.env.local
+.env.development
+.env.production
+
+# Backup env files (just in case someone creates them)
+*.env.backup
+*.env.bak
+
+# VSCode settings & editor cruft
+.vscode/
+.idea/
+
+# macOS trash files
+.DS_Store
+
+# Windows trash files
+Thumbs.db
