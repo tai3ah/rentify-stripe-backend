@@ -86,8 +86,8 @@ app.post("/create-connect-account-link", async (req, res) => {
 
     const link = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: "https://example.com/reauth",
-      return_url: "https://example.com/return",
+      refresh_url: "https://rentify-stripe-backend.onrender.com/reauth",
+      return_url: "https://rentify-stripe-backend.onrender.com/return",
       type: "account_onboarding",
     });
 
@@ -404,3 +404,12 @@ app.post("/transactions/owner", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+app.get("/return", (req, res) => {
+  res.send("Onboarding finished. You can close this window and return to the app.");
+});
+
+app.get("/reauth", (req, res) => {
+  res.send("Onboarding expired. Please restart from the app.");
+});
+
